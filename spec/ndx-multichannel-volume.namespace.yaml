@@ -20,6 +20,8 @@ namespaces:
     - NWBDataInterface
     - TimeSeries
     - Subject
+    - ImagingPlane
+    - PlaneSegmentation
   - namespace: hdmf-common
     neurodata_types:
     - Data

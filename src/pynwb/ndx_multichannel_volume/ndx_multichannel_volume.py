@@ -18,7 +18,7 @@ from pynwb.epoch import TimeIntervals
 from pynwb.file import Subject
 from pynwb.behavior import SpatialSeries, Position
 from pynwb.image import ImageSeries
-from pynwb.ophys import OnePhotonSeries, OpticalChannel, ImageSegmentation, Fluorescence, CorrectedImageStack, MotionCorrection, RoiResponseSeries
+from pynwb.ophys import OnePhotonSeries, OpticalChannel, ImageSegmentation, Fluorescence, CorrectedImageStack, MotionCorrection, RoiResponseSeries, PlaneSegmentation, ImagingPlane
 from datetime import datetime
 from dateutil import tz
 import pandas as pd
@@ -56,11 +56,11 @@ OpticalChannelPlus = get_class('OpticalChannelPlus', 'ndx-multichannel-volume')
 MultiChannelVolumeSeries = get_class('MultiChannelVolumeSeries', 'ndx-multichannel-volume')
 
 @register_class('ImagingVolume', 'ndx-multichannel-volume')
-class ImagingVolume(NWBDataInterface):
+class ImagingVolume(ImagingPlane):
     """An imaging plane and its metadata."""
 
     __nwbfields__ = ({'name': 'optical_channel_plus', 'child': True},
-                     'Order_optical_channels',
+                     'order_optical_channels',
                      'description',
                      'device',
                      'location',
@@ -70,45 +70,24 @@ class ImagingVolume(NWBDataInterface):
                      'grid_spacing',
                      'grid_spacing_units',
                      'reference_frame',
+                     'excitation_lambda',
+                     'indicator'
                      )
 
-    @docval(*get_docval(NWBDataInterface.__init__, 'name'),  # required
+    @docval(*get_docval(ImagingPlane.__init__, 'name', 'description', 'device', 'location', 'reference_frame', 'origin_coords', 'origin_coords_unit', 'grid_spacing', 'grid_spacing_unit'),  # required
             {'name': 'optical_channel_plus', 'type': ('data', 'array_data', OpticalChannelPlus),  # required
              'doc': 'One of possibly many groups storing channel-specific data.'},
-            {'name': 'Order_optical_channels', 'type':OpticalChannelReferences, 'doc':'Order of the optical channels in the data'},
-            {'name': 'description', 'type': str, 'doc': 'Description of this ImagingVolume.'},  # required
-            {'name': 'device', 'type': Device, 'doc': 'the device that was used to record'},  # required
-            {'name': 'location', 'type': str, 'doc': 'Location of image plane.'},  # required
-            {'name': 'reference_frame', 'type': str,
-             'doc': 'Describes position and reference frame of manifold based on position of first element '
-                    'in manifold.',
-             'default': None},
-            {'name': 'origin_coords', 'type': 'array_data',
-             'doc': 'Physical location of the first element of the imaging plane (0, 0) for 2-D data or (0, 0, 0) for '
-                    '3-D data. See also reference_frame for what the physical location is relative to (e.g., bregma).',
-             'default': None},
-            {'name': 'origin_coords_unit', 'type': str,
-             'doc': "Measurement units for origin_coords. The default value is 'meters'.",
-             'default': 'meters'},
-            {'name': 'grid_spacing', 'type': 'array_data',
-             'doc': "Space between pixels in (x, y) or voxels in (x, y, z) directions, in the specified unit. Assumes "
-                    "imaging plane is a regular grid. See also reference_frame to interpret the grid.",
-             'default': None},
-            {'name': 'grid_spacing_unit', 'type': str,
-             'doc': "Measurement units for grid_spacing. The default value is 'meters'.",
-             'default': 'meters'})
+            {'name': 'order_optical_channels', 'type':OpticalChannelReferences, 'doc':'Order of the optical channels in the data'})
     def __init__(self, **kwargs):
         keys_to_set = ('optical_channel_plus',
-                       'Order_optical_channels',
-                       'description',
-                       'device',
-                       'location',
-                       'reference_frame',
-                       'origin_coords',
-                       'origin_coords_unit',
-                       'grid_spacing',
-                       'grid_spacing_unit')
+                       'order_optical_channels')
         args_to_set = popargs_to_dict(keys_to_set, kwargs)
+        if not 'optical_channel' in kwargs.keys():
+            kwargs['optical_channel'] = []
+        if not 'excitation_lambda' in kwargs.keys():
+            kwargs['excitation_lambda'] = 0.0
+        if not 'indicator' in kwargs.keys():
+            kwargs['indicator'] = ""
         super().__init__(**kwargs)
 
         if not isinstance(args_to_set['optical_channel_plus'], list):
@@ -118,7 +97,7 @@ class ImagingVolume(NWBDataInterface):
             setattr(self, key, val)
 
 @register_class('VolumeSegmentation', 'ndx-multichannel-volume')
-class VolumeSegmentation(DynamicTable):
+class VolumeSegmentation(PlaneSegmentation):
     """
     Stores pixels in an image that represent different regions of interest (ROIs)
     or masks. All segmentation for a given imaging volume is stored together, with
@@ -129,7 +108,9 @@ class VolumeSegmentation(DynamicTable):
     ROI names should remain consistent between them.
     """
 
-    __fields__ = ('imaging_volume','name')
+    __fields__ = ('imaging_volume',
+                  'labels',
+                  {'name': 'reference_images', 'child':True})
 
     __columns__ = (
         {'name': 'image_mask', 'description': 'Image masks for each ROI'},
@@ -137,30 +118,41 @@ class VolumeSegmentation(DynamicTable):
         {'name': 'color_voxel_mask', 'description': 'Color voxel masks for each ROI', 'index':True}
     )
 
-    @docval({'name': 'description', 'type': str,  # required
-             'doc': 'Description of image plane, recording wavelength, depth, etc.'},
+    @docval(*get_docval(PlaneSegmentation.__init__, 'id', 'columns', 'colnames', 'reference_images'),
+            {'name': 'description', 'type': str,  # required
+             'doc': 'Description of image volume, recording wavelength, depth, etc.'},
+            {'name': 'labels', 'type': 'array_data', 'default':[''], 'shape': [None], 'doc':'Ordered list of labels for ROIs'},
             {'name': 'imaging_volume', 'type': ImagingVolume,  # required
              'doc': 'the ImagingVolume this ROI applies to'},
-            {'name': 'name', 'type': str, 'doc': 'name of VolumeSegmentation.', 'default': None},
-            *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
-    def __init__(self, **kwargs):
-        imaging_volume = popargs('imaging_volume', kwargs)
-        if kwargs['name'] is None:
-            kwargs['name'] = imaging_volume.name
-        super().__init__(**kwargs)
-        self.imaging_volume = imaging_volume
+            {'name': 'name', 'type': str, 'doc': 'name of VolumeSegmentation.', 'default': None})
 
-    @docval({'name': 'voxel_mask', 'type': 'array_data', 'default': None,
-             'doc': 'voxel mask for 3D ROIs: [(x1, y1, z1, weight1, ID), (x2, y2, z2, weight2, ID), ...]',
-             'shape': (None, 5)},
-             {'name': 'color_voxel_mask', 'type': 'array_data', 'default': None,
-             'doc': 'voxel mask for 3D ROIs with color information',
-             'shape': (None, 9)},
+    def __init__(self, **kwargs):
+
+        keys_to_set = ('labels',
+                       'imaging_volume')
+        args_to_set = popargs_to_dict(keys_to_set, kwargs)
+
+        if not 'imaging_plane' in kwargs.keys():
+            kwargs['imaging_plane'] = args_to_set['imaging_volume']
+        super().__init__(**kwargs)
+
+        for key, val in args_to_set.items():
+            setattr(self, key, val)
+
+    @docval({'name': 'pixel_mask', 'type': 'array_data', 'default': None,
+            'doc': 'pixel mask for 2D ROIs: [(x1, y1, weight1), (x2, y2, weight2), ...]',
+            'shape': (None, 3)},
+            {'name': 'voxel_mask', 'type': 'array_data', 'default': None,
+            'doc': 'voxel mask for 3D ROIs: [(x1, y1, z1, weight1), (x2, y2, z2, weight2), ...]',
+            'shape': (None, 4)},
             {'name': 'image_mask', 'type': 'array_data', 'default': None,
-             'doc': 'image with the same size of image where positive values mark this ROI',
-             'shape': [[None]*3]},
-            {'name': 'id', 'type': int, 'doc': 'the ID for the ROI', 'default': None},
+            'doc': 'image with the same size of image where positive values mark this ROI',
+            'shape': [[None]*2, [None]*3]},
+            {'name': 'color_voxel_mask', 'type': 'array_data', 'default': None,
+            'doc': 'voxel mask for 3D ROIs with color information',
+            'shape': (None, 8)},
             allow_extra=True)
+    
     def add_roi(self, **kwargs):
         """Add a Region Of Interest (ROI) data to this"""
         voxel_mask, color_voxel_mask, image_mask = popargs('voxel_mask', 'color_voxel_mask', 'image_mask', kwargs)
@@ -169,11 +161,14 @@ class VolumeSegmentation(DynamicTable):
         rkwargs = dict(kwargs)
         if image_mask is not None:
             rkwargs['image_mask'] = image_mask
+            return super().add_roi(**rkwargs)
         if voxel_mask is not None:
             rkwargs['voxel_mask'] = voxel_mask
+            return super().add_roi(**rkwargs)
         if color_voxel_mask is not None:
             rkwargs['color_voxel_mask'] = color_voxel_mask
-        return super().add_row(**rkwargs)
+            return super().super().add_row(**rkwargs)
+        
 
     @staticmethod
     def voxel_to_image(voxel_mask):
@@ -217,7 +212,7 @@ class MultiChannelVolume(NWBDataInterface):
                      'RGBW_channels',
                      'data',
                      'imaging_volume',
-                     'Order_optical_channels'
+                     'order_optical_channels'
                      )
 
     @docval(*get_docval(NWBDataInterface.__init__, 'name'),  # required
@@ -226,7 +221,7 @@ class MultiChannelVolume(NWBDataInterface):
             {'name': 'description', 'type': str, 'doc':'description of image'},
             {'name': 'RGBW_channels', 'doc': 'which channels in image map to RGBW', 'type': 'array_data', 'shape':[None]},
             {'name': 'data', 'doc': 'Volumetric multichannel data', 'type': 'array_data', 'shape':[None]*4},
-            {'name': 'Order_optical_channels', 'type':OpticalChannelReferences, 'doc':'Order of the optical channels in the data'}
+            {'name': 'order_optical_channels', 'type':OpticalChannelReferences, 'doc':'Order of the optical channels in the data'}
     )
     
     def __init__(self, **kwargs):
@@ -235,7 +230,7 @@ class MultiChannelVolume(NWBDataInterface):
                        'RGBW_channels',
                        'data',
                        'imaging_volume',
-                       'Order_optical_channels'
+                       'order_optical_channels'
                        )
         args_to_set = popargs_to_dict(keys_to_set, kwargs)
         super().__init__(**kwargs)

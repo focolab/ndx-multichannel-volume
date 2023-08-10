@@ -35,6 +35,8 @@ def main():
     ns_builder.include_type('NWBDataInterface', namespace='core')
     ns_builder.include_type('TimeSeries', namespace='core')
     ns_builder.include_type('Subject', namespace='core')
+    ns_builder.include_type('ImagingPlane', namespace='core')
+    ns_builder.include_type('PlaneSegmentation', namespace='core')
 
     # TODO: define your new data types
     # see https://pynwb.readthedocs.io/en/latest/extensions.html#extending-nwb
@@ -188,7 +190,7 @@ def main():
 
         groups = [
                 NWBGroupSpec(
-                name = 'Order_optical_channels',
+                name = 'order_optical_channels',
                 doc = 'Ordered list of names of the optical channels in the data',
                 neurodata_type_inc = 'OpticalChannelReferences',
             )
@@ -205,56 +207,8 @@ def main():
 
     ImagingVolume = NWBGroupSpec(
         neurodata_type_def = 'ImagingVolume',
-        neurodata_type_inc = 'NWBDataInterface',
+        neurodata_type_inc = 'ImagingPlane',
         doc = 'An Imaging Volume and its Metadata',
-        attributes = [
-            NWBAttributeSpec(
-                name= 'origin_coords_unit',
-                dtype = 'text',
-                default_value = 'meters',
-                doc = 'Measurement units for origin_coords. The default value is meters.'
-            ),
-            NWBAttributeSpec(
-                name = 'grid_spacing_unit',
-                dtype = 'text',
-                default_value = 'meters',
-                doc = 'Measurement units for grid_spacing. The default value is meters.'
-            )
-        ],
-        datasets = [
-            NWBDatasetSpec(
-                name = 'description',
-                dtype = 'text',
-                doc = 'Description of the imaging plane'
-            ),
-            NWBDatasetSpec(
-                name = 'location',
-                dtype = 'text',
-                doc = 'Location of the imaging plane. Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.'
-            ),
-            NWBDatasetSpec(
-                name=  'origin_coords',
-                dtype = 'float32',
-                dims = ['x, y, z'],
-                shape = [3],
-                doc = 'Physical location of the first element of the imaging plane. see also reference_frame for what the physical location is relative to (e.g., bregma).',
-                quantity = '?'
-            ),
-            NWBDatasetSpec(
-                name = 'grid_spacing',
-                dtype = 'float32',
-                dims = ['x, y, z'],
-                shape = [3],
-                doc = 'Space between voxels in (x,y,z) directions in the specified unit. Assumes imaging plane is a regular grid. See also reference_frame to interpret the grid.',
-                quantity = '?'
-            ),
-            NWBDatasetSpec(
-                name = 'reference_frame',
-                dtype = 'text',
-                doc = 'Describes reference frame of origin_coords and grid_spacing. See doc for imaging_plane for more detail and examples.',
-                quantity = '?'
-            )
-        ],
 
         groups = [
             NWBGroupSpec(
@@ -263,19 +217,11 @@ def main():
                 quantity = '*'
             ),
             NWBGroupSpec(
-                name = 'Order_optical_channels',
+                name = 'order_optical_channels',
                 doc = 'Ordered list of names of the optical channels in the data',
                 neurodata_type_inc = 'OpticalChannelReferences',
             )
 
-        ],
-
-        links = [
-            NWBLinkSpec(
-                name = 'device',
-                target_type = 'Device',
-                doc = 'Link to the Device object that was used to record from this electrode.'
-            )
         ]
     )
 
@@ -323,54 +269,16 @@ def main():
 
     VolumeSegmentation = NWBGroupSpec(
         neurodata_type_def = 'VolumeSegmentation',
-        neurodata_type_inc = 'DynamicTable',
+        neurodata_type_inc = 'PlaneSegmentation',
         doc = 'Results from image segmentation of a specific imaging volume',
+
         datasets= [
             NWBDatasetSpec(
-                name = 'image_mask',
-                neurodata_type_inc = 'VectorData',
-                dims = ['num_ROI', 'num_x', 'num_y', 'num_z'],
-                shape = [None, None, None, None],
-                doc = 'ROI masks for each ROI. Each image mask is the size of the original imaging plane (or volume) and members of the ROI are finite non-zero.',
-                quantity = '?'
-            ),
-            NWBDatasetSpec(
-                name = 'voxel_mask_index',
-                neurodata_type_inc = 'VectorIndex',
-                doc = 'Index into pixel_mask.',
-                quantity = '?'
-            ),
-            NWBDatasetSpec(
-                name = 'voxel_mask',
-                neurodata_type_inc = 'VectorData',
-                dtype = [
-                    NWBDtypeSpec(
-                        name = 'x',
-                        dtype = 'uint32',
-                        doc = 'Voxel x-coordinate'
-                    ),
-                    NWBDtypeSpec(
-                        name = 'y',
-                        dtype = 'uint32',
-                        doc = 'Voxel y-coordinate'
-                    ),
-                    NWBDtypeSpec(
-                        name = 'z',
-                        dtype = 'uint32',
-                        doc = 'Voxel z-coordinate'
-                    ),
-                    NWBDtypeSpec(
-                        name = 'weight',
-                        dtype = 'float32',
-                        doc = 'Weight of the voxel'
-                    ),
-                    NWBDtypeSpec(
-                        name = 'ID',
-                        dtype = 'text',
-                        doc = 'Cell ID of the ROI'
-                    )
-                ],
-                doc = 'Voxel masks for each ROI: a list of indices and weights for the ROI. Voxel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation',
+                name = 'labels',
+                dims = ['num_ROI'],
+                shape = [None],
+                dtype = 'text',
+                doc = 'Ordered list of labels for ROIs',
                 quantity = '?'
             ),
             NWBDatasetSpec(
@@ -393,16 +301,6 @@ def main():
                         doc = 'Voxel z-coordinate'
                     ),
                     NWBDtypeSpec(
-                        name = 'weight',
-                        dtype = 'float32',
-                        doc = 'Weight of the voxel'
-                    ),
-                    NWBDtypeSpec(
-                        name = 'ID',
-                        dtype = 'text',
-                        doc = 'Cell ID of the ROI'
-                    ),
-                                        NWBDtypeSpec(
                         name = 'R',
                         dtype = 'uint32',
                         doc = 'Voxel red value'
@@ -422,8 +320,13 @@ def main():
                         dtype = 'uint32',
                         doc = 'voxel white value'
                     ),
+                    NWBDtypeSpec(
+                        name = 'weight',
+                        dtype = 'float32',
+                        doc = 'Weight of the voxel'
+                    )
                 ],
-                doc = 'Voxel masks for each ROI including RGBW color values',
+                doc = 'Voxel masks for each ROI including RGBW color values for each pixel',
                 quantity = '?'
             )
         ],
