@@ -22,7 +22,7 @@ except Exception:
 
 setup_args = {
     'name': 'ndx-multichannel-volume',
-    'version': '0.1.1',
+    'version': '0.1.2',
     'description': 'extension to allow use of multichannel volumetric images',
     'long_description': readme,
     'long_description_content_type': readme_type,
