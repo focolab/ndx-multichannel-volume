@@ -72,27 +72,15 @@ def main():
 
     MultiChannelVolumeSeries = NWBGroupSpec(
         neurodata_type_def = 'MultiChannelVolumeSeries',
-        neurodata_type_inc = 'TimeSeries',
-        doc = 'Time series of volumetric data with multiple channels',
+        neurodata_type_inc = 'ImageSeries',
+        doc = 'Image series of volumetric data with multiple channels',
         datasets = [
             NWBDatasetSpec(
                 name = 'data',
                 dtype = 'int16',
                 doc = 'Data representing multichannel volumetric images across frames',
-                dims = ['frame','x', 'y', 'z', 'channel'],
-                shape = [None, None, None, None, None],
-            ),
-            NWBDatasetSpec(
-                name = 'description',
-                doc = 'description of image series',
-                dtype = 'float32',
-            ),
-            NWBDatasetSpec(
-                name = 'RGBW_channels',
-                doc = 'which channels in image map to RGBW',
-                dtype = 'int8',
-                dims = ['channels'],
-                shape = [4]
+                dims = [['frame','x','y','z'],['frame','x', 'y', 'z', 'channel']],
+                shape = [[None, None, None, None],[None, None, None, None, None]],
             ),
             NWBDatasetSpec(
                 name = 'resolution',
@@ -123,6 +111,12 @@ def main():
                 doc = 'Power of the excitation in mW, if known.',
                 dims = ['channels'],
                 shape = [None],
+                quantity = '?'
+            ),
+            NWBDatasetSpec(
+                name = 'intensity',
+                dtype = 'float32',
+                doc = 'Intensity of the excitation in mW/mm^2, if known.',
                 quantity = '?'
             )
         ],
@@ -161,13 +155,6 @@ def main():
         doc='An extension of the base NWBData type to allow for multichannel volumetric images',
         datasets = [
             NWBDatasetSpec(
-                name = 'resolution',
-                doc = 'pixel resolution of the image',
-                dtype = 'float32',
-                dims = ['xyz scale'],
-                shape = [3],
-            ),
-            NWBDatasetSpec(
                 name = 'description',
                 doc = 'description of image',
                 dtype = 'text',
@@ -178,6 +165,7 @@ def main():
                 dtype = 'int8',
                 dims = ['channels'],
                 shape = [4],
+                quantity = '?'
             ),
             NWBDatasetSpec(
                 name = 'data',

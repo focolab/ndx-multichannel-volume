@@ -17,8 +17,8 @@ groups:
     doc: Worm cultivation temperature in C
     quantity: '?'
 - neurodata_type_def: MultiChannelVolumeSeries
-  neurodata_type_inc: TimeSeries
-  doc: Time series of volumetric data with multiple channels
+  neurodata_type_inc: ImageSeries
+  doc: Image series of volumetric data with multiple channels
   attributes:
   - name: scan_line_rate
     dtype: float32
@@ -32,28 +32,26 @@ groups:
   - name: data
     dtype: int16
     dims:
-    - frame
-    - x
-    - y
-    - z
-    - channel
+    - - frame
+      - x
+      - y
+      - z
+    - - frame
+      - x
+      - y
+      - z
+      - channel
     shape:
-    - null
-    - null
-    - null
-    - null
-    - null
+    - - null
+      - null
+      - null
+      - null
+    - - null
+      - null
+      - null
+      - null
+      - null
     doc: Data representing multichannel volumetric images across frames
-  - name: description
-    dtype: float32
-    doc: description of image series
-  - name: RGBW_channels
-    dtype: int8
-    dims:
-    - channels
-    shape:
-    - 4
-    doc: which channels in image map to RGBW
   - name: resolution
     dtype: float32
     dims:
@@ -85,6 +83,10 @@ groups:
     - null
     doc: Power of the excitation in mW, if known.
     quantity: '?'
+  - name: intensity
+    dtype: float32
+    doc: Intensity of the excitation in mW/mm^2, if known.
+    quantity: '?'
   links:
   - name: imaging_volume
     target_type: ImagingVolume
@@ -97,13 +99,6 @@ groups:
   doc: An extension of the base NWBData type to allow for multichannel volumetric
     images
   datasets:
-  - name: resolution
-    dtype: float32
-    dims:
-    - xyz scale
-    shape:
-    - 3
-    doc: pixel resolution of the image
   - name: description
     dtype: text
     doc: description of image
@@ -114,6 +109,7 @@ groups:
     shape:
     - 4
     doc: which channels in image map to RGBW
+    quantity: '?'
   - name: data
     dtype: int16
     dims:

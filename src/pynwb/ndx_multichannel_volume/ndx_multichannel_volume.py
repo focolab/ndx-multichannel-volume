@@ -207,7 +207,7 @@ class VolumeSegmentation(PlaneSegmentation):
 class MultiChannelVolume(NWBDataInterface):
     """An imaging plane and its metadata."""
 
-    __nwbfields__ = ('resolution',
+    __nwbfields__ = (
                      'description',
                      'RGBW_channels',
                      'data',
@@ -216,7 +216,6 @@ class MultiChannelVolume(NWBDataInterface):
                      )
 
     @docval(*get_docval(NWBDataInterface.__init__, 'name'),  # required
-            {'name': 'resolution', 'type': 'array_data', 'doc':'pixel resolution of the image', 'shape':[None]},
             {'name': 'imaging_volume', 'type': ImagingVolume, 'doc': 'the Imaging Volume the data was generated from'},
             {'name': 'description', 'type': str, 'doc':'description of image'},
             {'name': 'RGBW_channels', 'doc': 'which channels in image map to RGBW', 'type': 'array_data', 'shape':[None]},
@@ -225,8 +224,7 @@ class MultiChannelVolume(NWBDataInterface):
     )
     
     def __init__(self, **kwargs):
-        keys_to_set = ('resolution',
-                       'description',
+        keys_to_set = ('description',
                        'RGBW_channels',
                        'data',
                        'imaging_volume',
@@ -234,6 +232,91 @@ class MultiChannelVolume(NWBDataInterface):
                        )
         args_to_set = popargs_to_dict(keys_to_set, kwargs)
         super().__init__(**kwargs)
+
+        for key, val in args_to_set.items():
+            setattr(self, key, val)
+
+@register_class('MultiChannelVolumeSeries', 'ndx-multichannel-volume')
+class MultiChannelVolumeSeries(ImageSeries):
+    """Multi channel volumetric image stack collected over time."""
+
+    __nwbfields__ = (
+        "imaging_volume", "pmt_gain", "scan_line_rate", "exposure_time", "binning", "power", "intensity"
+    )
+
+    @docval(
+        *get_docval(ImageSeries.__init__, "name"),  # required
+        {"name": "imaging_volume", "type": ImagingVolume, "doc": "Imaging volume class/pointer."},  # required
+        *get_docval(ImageSeries.__init__, "unit", "format"),
+        {"name": "pmt_gain", "type": float, "doc": "Photomultiplier gain.", "default": None},
+        {"name": 'data', "type":("array_data", "data", TimeSeries), 'shape':([None]*4,[None]*5),
+         'doc': ('The data values. Can be 4D or 5D. The first dimension must be time (frame). The second, third, and fourth '
+                     'dimensions represent x, y, and z. The optional fourth dimension represents channels. Either data or '
+                     'external_file must be specified (not None), but not both'),
+         "default":None},
+        {
+            "name": "scan_line_rate",
+            "type": float,
+            "doc": (
+                "Lines imaged per second. This is also stored in /general/optophysiology but is kept "
+                "here as it is useful information for analysis, and so good to be stored w/ the actual data."
+             ),
+            "default": None,
+        },
+        {
+            "name": "exposure_time",
+            "type": "array_data",
+            "doc": "Exposure time of the sample; often the inverse of the frequency.",
+            "default": None,
+        },
+        {
+            "name": "binning",
+            "type": (int, "uint"),
+            "doc": "Amount of pixels combined into 'bins'; could be 1, 2, 4, 8, etc.",
+            "default": None,
+        },
+        {
+            "name": "power",
+            "type": "array_data",
+            "doc": "Power of the excitation in mW, if known.",
+            "default": None,
+        },
+        {
+            "name": "intensity",
+            "type": "array_data",
+            "doc": "Intensity of the excitation in mW/mm^2, if known.",
+            "default": None,
+        },
+        *get_docval(
+            ImageSeries.__init__,
+            "external_file",
+            "starting_frame",
+            "bits_per_pixel",
+            "dimension",
+            "conversion",
+            "timestamps",
+            "starting_time",
+            "rate",
+            "comments",
+            "description",
+            "resolution",
+            "control",
+            "control_description",
+            "device",
+            "offset",
+        )
+    )
+    def __init__(self, **kwargs):
+        keys_to_set = (
+            "imaging_volume", "pmt_gain", "scan_line_rate", "exposure_time", "binning", "power", "intensity"
+        )
+        args_to_set = popargs_to_dict(keys_to_set, kwargs)
+        super().__init__(**kwargs)
+
+        if args_to_set["binning"] is not None and args_to_set["binning"] < 0:
+            raise ValueError(f"Binning value must be >= 0: {args_to_set['binning']}")
+        if isinstance(args_to_set["binning"], int):
+            args_to_set["binning"] = np.uint(args_to_set["binning"])
 
         for key, val in args_to_set.items():
             setattr(self, key, val)
