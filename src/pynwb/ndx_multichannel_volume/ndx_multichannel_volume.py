@@ -54,6 +54,7 @@ CElegansSubject = get_class('CElegansSubject', 'ndx-multichannel-volume')
 OpticalChannelReferences = get_class('OpticalChannelReferences', 'ndx-multichannel-volume')
 OpticalChannelPlus = get_class('OpticalChannelPlus', 'ndx-multichannel-volume')
 MultiChannelVolumeSeries = get_class('MultiChannelVolumeSeries', 'ndx-multichannel-volume')
+CodeMetaData = get_class('CodeMetaData', 'ndx-multichannel-volume')
 
 @register_class('ImagingVolume', 'ndx-multichannel-volume')
 class ImagingVolume(ImagingPlane):

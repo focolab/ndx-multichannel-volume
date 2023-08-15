@@ -11,7 +11,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc="""extension to allow use of multichannel volumetric images""",
         name="""ndx-multichannel-volume""",
-        version="""0.1.0""",
+        version="""0.1.4""",
         author=list(map(str.strip, """Daniel Sprague""".split(','))),
         contact=list(map(str.strip, """daniel.sprague@ucsf.edu""".split(',')))
     )
@@ -37,10 +37,25 @@ def main():
     ns_builder.include_type('Subject', namespace='core')
     ns_builder.include_type('ImagingPlane', namespace='core')
     ns_builder.include_type('PlaneSegmentation', namespace='core')
+    ns_builder.include_type('LabMetaData', namespace= 'core')
 
     # TODO: define your new data types
     # see https://pynwb.readthedocs.io/en/latest/extensions.html#extending-nwb
     # for more information
+
+    CodeMetaData = NWBGroupSpec(
+        neurodata_type_def = 'CodeMetaData',
+        neurodata_type_inc = 'LabMetaData',
+        doc = 'Metadata associated with code used to produce data for the sake of reproducibility',
+        attributes = [
+            NWBAttributeSpec(
+                name = 'NdxMultichannelVolumeVersion',
+                dtype = 'text',
+                doc = 'version of ndx-multichannel-volume extension used to produce this file',
+                required = True
+            )
+        ]
+    )
 
     CElegansSubject = NWBGroupSpec(
         neurodata_type_def = 'CElegansSubject',
@@ -328,7 +343,7 @@ def main():
     )
 
     # TODO: add all of your new data types to this list
-    new_data_types = [CElegansSubject, MultiChannelVolumeSeries, MultiChannelVolume, ImagingVolume, OpticalChannelReferences, OpticalChannelPlus, VolumeSegmentation]
+    new_data_types = [CodeMetaData, CElegansSubject, MultiChannelVolumeSeries, MultiChannelVolume, ImagingVolume, OpticalChannelReferences, OpticalChannelPlus, VolumeSegmentation]
 
     # export the spec to yaml files in the spec folder
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'spec'))
