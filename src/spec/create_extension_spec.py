@@ -77,7 +77,7 @@ def main():
         datasets = [
             NWBDatasetSpec(
                 name = 'data',
-                dtype = 'int16',
+                dtype = 'uint16',
                 doc = 'Data representing multichannel volumetric images across frames',
                 dims = [['frame','x','y','z'],['frame','x', 'y', 'z', 'channel']],
                 shape = [[None, None, None, None],[None, None, None, None, None]],
@@ -172,7 +172,7 @@ def main():
                 doc = 'Volumetric multichannel data',
                 dims = ['x','y','z','channel'],
                 shape = [None, None,None,None],
-                dtype = 'int16',
+                dtype = 'uint16',
             )
         ],
 

@@ -30,7 +30,7 @@ groups:
     required: false
   datasets:
   - name: data
-    dtype: int16
+    dtype: uint16
     dims:
     - - frame
       - x
@@ -111,7 +111,7 @@ groups:
     doc: which channels in image map to RGBW
     quantity: '?'
   - name: data
-    dtype: int16
+    dtype: uint16
     dims:
     - x
     - y
