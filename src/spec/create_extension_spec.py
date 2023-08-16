@@ -43,20 +43,6 @@ def main():
     # see https://pynwb.readthedocs.io/en/latest/extensions.html#extending-nwb
     # for more information
 
-    CodeMetaData = NWBGroupSpec(
-        neurodata_type_def = 'CodeMetaData',
-        neurodata_type_inc = 'LabMetaData',
-        doc = 'Metadata associated with code used to produce data for the sake of reproducibility',
-        attributes = [
-            NWBAttributeSpec(
-                name = 'NdxMultichannelVolumeVersion',
-                dtype = 'text',
-                doc = 'version of ndx-multichannel-volume extension used to produce this file',
-                required = True
-            )
-        ]
-    )
-
     CElegansSubject = NWBGroupSpec(
         neurodata_type_def = 'CElegansSubject',
         neurodata_type_inc = 'Subject',
@@ -343,7 +329,7 @@ def main():
     )
 
     # TODO: add all of your new data types to this list
-    new_data_types = [CodeMetaData, CElegansSubject, MultiChannelVolumeSeries, MultiChannelVolume, ImagingVolume, OpticalChannelReferences, OpticalChannelPlus, VolumeSegmentation]
+    new_data_types = [CElegansSubject, MultiChannelVolumeSeries, MultiChannelVolume, ImagingVolume, OpticalChannelReferences, OpticalChannelPlus, VolumeSegmentation]
 
     # export the spec to yaml files in the spec folder
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'spec'))
