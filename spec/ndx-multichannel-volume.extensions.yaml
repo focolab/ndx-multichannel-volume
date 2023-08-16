@@ -1,4 +1,11 @@
 groups:
+- neurodata_type_def: CodeMetaData
+  neurodata_type_inc: LabMetaData
+  doc: Metadata associated with code used to produce data for the sake of reproducibility
+  attributes:
+  - name: NdxMultichannelVolumeVersion
+    dtype: text
+    doc: version of ndx-multichannel-volume extension used to produce this file
 - neurodata_type_def: CElegansSubject
   neurodata_type_inc: Subject
   doc: Subject object with support for C. Elegans specific attributes
