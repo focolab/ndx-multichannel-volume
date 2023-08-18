@@ -52,13 +52,6 @@ groups:
       - null
       - null
     doc: Data representing multichannel volumetric images across frames
-  - name: resolution
-    dtype: float32
-    dims:
-    - xyz scale
-    shape:
-    - 3
-    doc: pixel resolution of each image
   - name: pmt_gain
     dtype: float32
     dims:

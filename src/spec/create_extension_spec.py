@@ -11,7 +11,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc="""extension to allow use of multichannel volumetric images""",
         name="""ndx-multichannel-volume""",
-        version="""0.1.5""",
+        version="""0.1.7""",
         author=list(map(str.strip, """Daniel Sprague""".split(','))),
         contact=list(map(str.strip, """daniel.sprague@ucsf.edu""".split(',')))
     )
@@ -82,13 +82,6 @@ def main():
                 doc = 'Data representing multichannel volumetric images across frames',
                 dims = [['frame','x','y','z'],['frame','x', 'y', 'z', 'channel']],
                 shape = [[None, None, None, None],[None, None, None, None, None]],
-            ),
-            NWBDatasetSpec(
-                name = 'resolution',
-                doc = 'pixel resolution of each image',
-                dtype = 'float32',
-                dims = ['xyz scale'],
-                shape = [3]
             ),
             NWBDatasetSpec(
                 name = 'pmt_gain',

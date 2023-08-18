@@ -113,12 +113,13 @@ class VolumeSegmentation(PlaneSegmentation):
                   {'name': 'reference_images', 'child':True})
 
     __columns__ = (
-        {'name': 'image_mask', 'description': 'Image masks for each ROI'},
-        {'name': 'voxel_mask', 'description': 'Voxel masks for each ROI', 'index': True},
+        {'name': 'image_mask', 'description': 'Image masks for each ROI', 'child':True},
+        {'name': 'voxel_mask', 'description': 'Voxel masks for each ROI', 'index': True, 'child':True},
         {'name': 'color_voxel_mask', 'description': 'Color voxel masks for each ROI', 'index':True}
     )
 
-    @docval(*get_docval(PlaneSegmentation.__init__, 'id', 'columns', 'colnames', 'reference_images'),
+    @docval(*get_docval(PlaneSegmentation.__init__, 'id', 'columns', 'colnames','reference_images'),
+            #*get_docval(DynamicTable.__init__, 'id', 'columns','colnames'),
             {'name': 'description', 'type': str,  # required
              'doc': 'Description of image volume, recording wavelength, depth, etc.'},
             {'name': 'labels', 'type': 'array_data', 'default':[''], 'shape': [None], 'doc':'Ordered list of labels for ROIs'},
