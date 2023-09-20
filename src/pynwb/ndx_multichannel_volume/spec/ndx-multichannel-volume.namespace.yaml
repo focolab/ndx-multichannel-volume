@@ -23,6 +23,7 @@ namespaces:
     - ImagingPlane
     - PlaneSegmentation
     - LabMetaData
+    - ImageSegmentation
   - namespace: hdmf-common
     neurodata_types:
     - Data

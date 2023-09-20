@@ -38,6 +38,7 @@ def main():
     ns_builder.include_type('ImagingPlane', namespace='core')
     ns_builder.include_type('PlaneSegmentation', namespace='core')
     ns_builder.include_type('LabMetaData', namespace= 'core')
+    ns_builder.include_type('ImageSegmentation', namespace='core')
 
     # TODO: define your new data types
     # see https://pynwb.readthedocs.io/en/latest/extensions.html#extending-nwb
@@ -67,6 +68,46 @@ def main():
                 dtype = 'text',
                 doc = 'amount of time in current growth stage in ISO 8601 duration format',
                 required = False
+            )
+        ]
+    )
+
+    SegmentationLabels = NWBGroupSpec(
+        neurodata_type_def = 'SegmentationLabels',
+        neurodata_type_inc = 'NWBDataInterface',
+        doc = 'Segmentation labels',
+        datasets = [
+            NWBDatasetSpec(
+                name = 'labels',
+                dtype = 'text',
+                dims = ['labels'],
+                shape = [None],
+                doc = 'ROI labels. Should be the same length as the number of ROIs'
+            ),
+            NWBDatasetSpec(
+                name = 'description',
+                doc = 'description of what ROIs represent',
+                dtype = 'text',
+            ),
+        ],
+        links = [
+            NWBLinkSpec(
+                name = 'ImageSegmentation',
+                target_type = 'ImageSegmentation',
+                doc = 'Link to ImageSegmentation object that the labels apply to.',
+                quantity = '?'
+            ),
+            NWBLinkSpec(
+                name = 'MCVSegmentation',
+                target_type = 'MultiChannelVolume',
+                doc = 'Link to MultiChannelVolume holding indexed mask of ROIs.',
+                quantity = '?'
+            ),
+            NWBLinkSpec(
+                name = 'MCVSeriesSegmentation',
+                target_type = 'MultiChannelVolumeSeries',
+                doc = 'Link to MultiChannelVolumeSeries holding series of indexed masks of ROIs.',
+                quantity = '?'
             )
         ]
     )
@@ -322,7 +363,7 @@ def main():
     )
 
     # TODO: add all of your new data types to this list
-    new_data_types = [CElegansSubject, MultiChannelVolumeSeries, MultiChannelVolume, ImagingVolume, OpticalChannelReferences, OpticalChannelPlus, VolumeSegmentation]
+    new_data_types = [CElegansSubject, MultiChannelVolumeSeries, MultiChannelVolume, ImagingVolume, OpticalChannelReferences, OpticalChannelPlus, VolumeSegmentation, SegmentationLabels]
 
     # export the spec to yaml files in the spec folder
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'spec'))

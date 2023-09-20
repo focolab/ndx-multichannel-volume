@@ -7,7 +7,7 @@ import numpy as np
 from pynwb import register_class
 from hdmf.utils import docval, get_docval, popargs
 from pynwb.ophys import ImageSeries 
-from pynwb.core import NWBDataInterface
+from pynwb.core import NWBDataInterface, NWBData
 from hdmf.common import DynamicTable
 from hdmf.utils import docval, popargs, get_docval, get_data_shape, popargs_to_dict
 from pynwb.file import Device
@@ -54,6 +54,7 @@ CElegansSubject = get_class('CElegansSubject', 'ndx-multichannel-volume')
 OpticalChannelReferences = get_class('OpticalChannelReferences', 'ndx-multichannel-volume')
 OpticalChannelPlus = get_class('OpticalChannelPlus', 'ndx-multichannel-volume')
 MultiChannelVolumeSeries = get_class('MultiChannelVolumeSeries', 'ndx-multichannel-volume')
+SegmentationLabels = get_class('SegmentationLabels', 'ndx-multichannel-volume')
 
 @register_class('ImagingVolume', 'ndx-multichannel-volume')
 class ImagingVolume(ImagingPlane):
@@ -220,7 +221,7 @@ class MultiChannelVolume(NWBDataInterface):
             {'name': 'imaging_volume', 'type': ImagingVolume, 'doc': 'the Imaging Volume the data was generated from'},
             {'name': 'description', 'type': str, 'doc':'description of image'},
             {'name': 'RGBW_channels', 'doc': 'which channels in image map to RGBW', 'type': 'array_data', 'shape':[None]},
-            {'name': 'data', 'doc': 'Volumetric multichannel data', 'type': 'array_data', 'shape':[None]*4},
+            {'name': 'data', 'doc': 'Volumetric multichannel data', 'type': ('array_data', 'data'), 'shape':[None]*4},
             {'name': 'order_optical_channels', 'type':OpticalChannelReferences, 'doc':'Order of the optical channels in the data'}
     )
     

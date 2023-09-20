@@ -212,3 +212,30 @@ groups:
   - name: imaging_volume
     target_type: ImagingVolume
     doc: Link to ImagingVolume object from which this data was generated.
+- neurodata_type_def: SegmentationLabels
+  neurodata_type_inc: NWBDataInterface
+  doc: Segmentation labels
+  datasets:
+  - name: labels
+    dtype: text
+    dims:
+    - labels
+    shape:
+    - null
+    doc: ROI labels. Should be the same length as the number of ROIs
+  - name: description
+    dtype: text
+    doc: description of what ROIs represent
+  links:
+  - name: ImageSegmentation
+    target_type: ImageSegmentation
+    doc: Link to ImageSegmentation object that the labels apply to.
+    quantity: '?'
+  - name: MCVSegmentation
+    target_type: MultiChannelVolume
+    doc: Link to MultiChannelVolume holding indexed mask of ROIs.
+    quantity: '?'
+  - name: MCVSeriesSegmentation
+    target_type: MultiChannelVolumeSeries
+    doc: Link to MultiChannelVolumeSeries holding series of indexed masks of ROIs.
+    quantity: '?'
