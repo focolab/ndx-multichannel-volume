@@ -17,7 +17,7 @@ groups:
     doc: Worm cultivation temperature in C
     quantity: '?'
 - neurodata_type_def: MultiChannelVolumeSeries
-  neurodata_type_inc: ImageSeries
+  neurodata_type_inc: TimeSeries
   doc: Image series of volumetric data with multiple channels
   attributes:
   - name: scan_line_rate
@@ -27,6 +27,38 @@ groups:
   - name: binning
     dtype: uint8
     doc: Amount of pixels combined into bins; could be 1, 2, 4, 8, etc.
+    required: false
+  - name: starting_frame
+    dtype: int32
+    dims:
+    - num_files
+    shape:
+    - null
+    doc: "Each external image may contain one or more consecutive frames of the full\n\
+      \                         ImageSeries. This attribute serves as an index to
+      indicate which frames each file\n                         contains, to faciliate
+      random access. The 'starting_frame' attribute, hence,\n                    \
+      \     contains a list of frame numbers within the full ImageSeries of the first
+      frame\n                         of each file listed in the parent 'external_file'
+      dataset. Zero-based indexing is\n                         used (hence, the first
+      element will always be zero). For example, if the\n                        \
+      \ 'external_file' dataset has three paths to files and the first file has 5
+      frames,\n                         the second file has 10 frames, and the third
+      file has 20 frames, then this\n                         attribute will have
+      values [0, 5, 15]. If there is a single external file that\n               \
+      \          holds all of the frames of the ImageSeries (and so there is a single
+      element in\n                         the 'external_file' dataset), then this
+      attribute should have value [0]."
+    required: false
+  - name: format
+    dtype: text
+    default_value: raw
+    doc: "Format of image. If this is 'external', then the attribute 'external_file'\n\
+      \                         contains the path information to the image files.
+      If this is 'raw', then the raw\n                         (single-channel) binary
+      data is stored in the 'data' dataset. If this attribute\n                  \
+      \       is not present, then the default format='raw' case is assumed.     \n\
+      \                        "
     required: false
   datasets:
   - name: data
@@ -79,6 +111,24 @@ groups:
   - name: intensity
     dtype: float32
     doc: Intensity of the excitation in mW/mm^2, if known.
+    quantity: '?'
+  - name: dimension
+    dtype: int32
+    dims:
+    - num_dims
+    shape:
+    - null
+    doc: Number of pixels on x, y, and z axes
+  - name: external_file
+    dtype: text
+    dims:
+    - num_files
+    shape:
+    - null
+    doc: Paths to one or more external file(s). Field is only present if format ='external'.
+      This is only relevant if the image series is stored in the file system as one
+      or more image file(s). This field should NOT be used if the image is stored
+      in another NWB file and that file is linked to this file
     quantity: '?'
   links:
   - name: imaging_volume

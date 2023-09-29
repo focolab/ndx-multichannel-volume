@@ -5,7 +5,7 @@ import skimage.io as skio
 from collections.abc import Iterable
 import numpy as np
 from pynwb import register_class
-from hdmf.utils import docval, get_docval, popargs
+from hdmf.utils import docval, get_docval, popargs, getargs
 from pynwb.ophys import ImageSeries 
 from pynwb.core import NWBDataInterface, NWBData
 from hdmf.common import DynamicTable
@@ -24,6 +24,7 @@ from dateutil import tz
 import pandas as pd
 import scipy.io as sio
 from datetime import datetime, timedelta
+import warnings
 
 
 
@@ -239,23 +240,28 @@ class MultiChannelVolume(NWBDataInterface):
             setattr(self, key, val)
 
 @register_class('MultiChannelVolumeSeries', 'ndx-multichannel-volume')
-class MultiChannelVolumeSeries(ImageSeries):
+class MultiChannelVolumeSeries(TimeSeries):
     """Multi channel volumetric image stack collected over time."""
 
     __nwbfields__ = (
-        "imaging_volume", "pmt_gain", "scan_line_rate", "exposure_time", "binning", "power", "intensity"
+        "imaging_volume", "pmt_gain", "scan_line_rate", "exposure_time", "binning", "power", "intensity", "dimension", "external_file", "starting_frame", "format", "device"
     )
 
+    DEFAULT_DATA = np.ndarray(shape=(0,0,0,0), dtype = np.uint8)
+
     @docval(
-        *get_docval(ImageSeries.__init__, "name"),  # required
+        *get_docval(TimeSeries.__init__, "name"),  # required
         {"name": "imaging_volume", "type": ImagingVolume, "doc": "Imaging volume class/pointer."},  # required
-        *get_docval(ImageSeries.__init__, "unit", "format"),
         {"name": "pmt_gain", "type": float, "doc": "Photomultiplier gain.", "default": None},
         {"name": 'data', "type":("array_data", "data", TimeSeries), 'shape':([None]*4,[None]*5),
          'doc': ('The data values. Can be 4D or 5D. The first dimension must be time (frame). The second, third, and fourth '
                      'dimensions represent x, y, and z. The optional fourth dimension represents channels. Either data or '
                      'external_file must be specified (not None), but not both'),
          "default":None},
+        {'name': 'unit', 'type': str,
+         'doc': ('The unit of measurement of the image data, e.g., values between 0 and 255. Required when data '
+                     'is specified. If unit (and data) are not specified, then unit will be set to "unknown".'),
+         'default': None},
         {
             "name": "scan_line_rate",
             "type": float,
@@ -265,6 +271,17 @@ class MultiChannelVolumeSeries(ImageSeries):
              ),
             "default": None,
         },
+        {'name': 'format', 'type': str,
+             'doc': 'Format of image. Three types: 1) Image format; tiff, png, jpg, etc. 2) external 3) raw.',
+             'default': None},
+        {'name': 'external_file', 'type': ('array_data', 'data'),
+             'doc': 'Path or URL to one or more external file(s). Field only present if format=external. '
+                    'Either external_file or data must be specified (not None), but not both.', 'default': None},
+        {'name': 'starting_frame', 'type': Iterable,
+             'doc': 'Each entry is a frame number that corresponds to the first frame of each file '
+                    'listed in external_file within the full ImageSeries.', 'default': None},
+        {'name': 'dimension', 'type': Iterable,
+             'doc': 'Number of pixels on x, y, (and z) axes.', 'default': None},
         {
             "name": "exposure_time",
             "type": "array_data",
@@ -289,31 +306,76 @@ class MultiChannelVolumeSeries(ImageSeries):
             "doc": "Intensity of the excitation in mW/mm^2, if known.",
             "default": None,
         },
+        {'name': 'device', 'type': Device,
+             'doc': 'Device used to capture the images/video.', 'default': None},
         *get_docval(
-            ImageSeries.__init__,
-            "external_file",
-            "starting_frame",
-            "bits_per_pixel",
-            "dimension",
+            TimeSeries.__init__,
+            "comments",
+            "resolution",
             "conversion",
+            "offset",
             "timestamps",
             "starting_time",
             "rate",
-            "comments",
             "description",
-            "resolution",
             "control",
-            "control_description",
-            "device",
-            "offset",
+            "control_description"
         )
     )
     def __init__(self, **kwargs):
         keys_to_set = (
-            "imaging_volume", "pmt_gain", "scan_line_rate", "exposure_time", "binning", "power", "intensity"
+            "imaging_volume","pmt_gain", "scan_line_rate", "exposure_time", "binning", "power", "intensity", "external_file", "starting_frame", "format", "device", "dimension"
         )
         args_to_set = popargs_to_dict(keys_to_set, kwargs)
+        name, data, unit = getargs("name", "data", "unit", kwargs)
+
+        if data is not None and unit is None:
+            raise ValueError("Must supply 'unit' argument when supplying 'data' to %s '%s'."
+                             % (self.__class__.__name__, name))
+        if args_to_set['external_file'] is None and data is None:
+            raise ValueError("Must supply either external_file or data to %s '%s'."
+                             % (self.__class__.__name__, name))
+        
+        # data and unit are required in TimeSeries, but allowed to be None here, so handle this specially
+        if data is None:
+            kwargs['data'] = MultiChannelVolumeSeries.DEFAULT_DATA
+        if unit is None:
+            kwargs['unit'] = MultiChannelVolumeSeries.DEFAULT_UNIT
+
+        # If a single external_file is given then set starting_frame  to [0] for backward compatibility
+        if (
+            args_to_set["external_file"] is not None
+            and args_to_set["starting_frame"] is None
+        ):
+            args_to_set["starting_frame"] = (
+                [0] if len(args_to_set["external_file"]) == 1 else None
+            )
+         
         super().__init__(**kwargs)
+
+        if self._change_external_file_format():
+            warnings.warn(
+                "%s '%s': The value for 'format' has been changed to 'external'. "
+                "Setting a default value for 'format' is deprecated and will be changed "
+                "to raising a ValueError in the next major release."
+                % (self.__class__.__name__, self.name),
+                DeprecationWarning,
+            )
+
+        if not self._check_image_series_dimension():
+            warnings.warn(
+                "%s '%s': Length of data does not match length of timestamps. Your data may be transposed. "
+                "Time should be on the 0th dimension"
+                % (self.__class__.__name__, self.name)
+            )
+
+        self._error_on_new_warn_on_construct(
+            error_msg=self._check_external_file_starting_frame_length()
+        )
+        self._error_on_new_warn_on_construct(
+            error_msg=self._check_external_file_format()
+        )
+        self._error_on_new_warn_on_construct(error_msg=self._check_external_file_data())
 
         if args_to_set["binning"] is not None and args_to_set["binning"] < 0:
             raise ValueError(f"Binning value must be >= 0: {args_to_set['binning']}")
@@ -322,3 +384,80 @@ class MultiChannelVolumeSeries(ImageSeries):
 
         for key, val in args_to_set.items():
             setattr(self, key, val)
+
+
+    def _change_external_file_format(self):
+        """
+        Change the format to 'external' when external_file is specified.
+        """
+        if (
+            get_data_shape(self.data)[0] == 0
+            and self.external_file is not None
+            and self.format is None
+        ):
+            self.format = "external"
+            return True
+
+        return False
+
+    def _check_time_series_dimension(self):
+        """Override _check_time_series_dimension to do nothing.
+        The _check_image_series_dimension method will be called instead.
+        """
+        return True
+
+    def _check_image_series_dimension(self):
+        """Check that the 0th dimension of data equals the length of timestamps, when applicable.
+
+        ImageSeries objects can have an external file instead of data stored. The external file cannot be
+        queried for the number of frames it contains, so this check will return True when an external file
+        is provided. Otherwise, this function calls the parent class' _check_time_series_dimension method.
+        """
+        if self.external_file is not None:
+            return True
+        return super()._check_time_series_dimension()
+
+    def _check_external_file_starting_frame_length(self):
+        """
+        Check that the number of frame indices in 'starting_frame' matches
+        the number of files in 'external_file'.
+        """
+        if self.external_file is None:
+            return
+        if get_data_shape(self.external_file) == get_data_shape(self.starting_frame):
+            return
+
+        return (
+            "%s '%s': The number of frame indices in 'starting_frame' should have "
+            "the same length as 'external_file'." % (self.__class__.__name__, self.name)
+        )
+
+    def _check_external_file_format(self):
+        """
+        Check that format is 'external' when external_file is specified.
+        """
+        if self.external_file is None:
+            return
+        if self.format == "external":
+            return
+
+        return "%s '%s': Format must be 'external' when external_file is specified." % (
+            self.__class__.__name__,
+            self.name,
+        )
+
+    def _check_external_file_data(self):
+        """
+        Check that data is an empty array when external_file is specified.
+        """
+        if self.external_file is None:
+            return
+        if get_data_shape(self.data)[0] == 0:
+            return
+
+        return (
+            "%s '%s': Either external_file or data must be specified (not None), but not both."
+            % (self.__class__.__name__, self.name)
+        )
+
+

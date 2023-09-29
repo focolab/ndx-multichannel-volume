@@ -11,7 +11,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc="""extension to allow use of multichannel volumetric images""",
         name="""ndx-multichannel-volume""",
-        version="""0.1.7""",
+        version="""0.1.9""",
         author=list(map(str.strip, """Daniel Sprague""".split(','))),
         contact=list(map(str.strip, """daniel.sprague@ucsf.edu""".split(',')))
     )
@@ -114,7 +114,7 @@ def main():
 
     MultiChannelVolumeSeries = NWBGroupSpec(
         neurodata_type_def = 'MultiChannelVolumeSeries',
-        neurodata_type_inc = 'ImageSeries',
+        neurodata_type_inc = 'TimeSeries',
         doc = 'Image series of volumetric data with multiple channels',
         datasets = [
             NWBDatasetSpec(
@@ -153,6 +153,21 @@ def main():
                 dtype = 'float32',
                 doc = 'Intensity of the excitation in mW/mm^2, if known.',
                 quantity = '?'
+            ),
+            NWBDatasetSpec(
+                name = 'dimension',
+                dtype = 'int32',
+                dims = ['num_dims'],
+                shape = [None],
+                doc = 'Number of pixels on x, y, and z axes',
+            ),
+            NWBDatasetSpec(
+                name = 'external_file',
+                dtype = 'text',
+                dims = ['num_files'],
+                shape = [None],
+                doc = "Paths to one or more external file(s). Field is only present if format ='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file",
+                quantity = '?'
             )
         ],
         attributes = [
@@ -167,6 +182,34 @@ def main():
                 dtype = 'uint8',
                 doc = 'Amount of pixels combined into bins; could be 1, 2, 4, 8, etc.',
                 required = False
+            ),
+            NWBAttributeSpec(
+                name = 'starting_frame',
+                dtype = 'int32',
+                dims = ['num_files'],
+                shape = [None],
+                doc = """Each external image may contain one or more consecutive frames of the full
+                         ImageSeries. This attribute serves as an index to indicate which frames each file
+                         contains, to faciliate random access. The 'starting_frame' attribute, hence,
+                         contains a list of frame numbers within the full ImageSeries of the first frame
+                         of each file listed in the parent 'external_file' dataset. Zero-based indexing is
+                         used (hence, the first element will always be zero). For example, if the
+                         'external_file' dataset has three paths to files and the first file has 5 frames,
+                         the second file has 10 frames, and the third file has 20 frames, then this
+                         attribute will have values [0, 5, 15]. If there is a single external file that
+                         holds all of the frames of the ImageSeries (and so there is a single element in
+                         the 'external_file' dataset), then this attribute should have value [0].""",
+                required = False
+            ),
+            NWBAttributeSpec(
+                name = 'format',
+                dtype = 'text',
+                default_value = 'raw',
+                doc = """Format of image. If this is 'external', then the attribute 'external_file'
+                         contains the path information to the image files. If this is 'raw', then the raw
+                         (single-channel) binary data is stored in the 'data' dataset. If this attribute
+                         is not present, then the default format='raw' case is assumed.     
+                        """
             )
         ],
 
