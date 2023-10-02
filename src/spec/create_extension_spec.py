@@ -405,8 +405,14 @@ def main():
         ]
     )
 
+    PlaneExtension = NWBGroupSpec(
+        neurodata_type_def = 'PlaneExtension',
+        neurodata_type_inc = 'PlaneSegmentation',
+        doc = 'Results from image segmentation of a specific imaging volume'
+    )
+
     # TODO: add all of your new data types to this list
-    new_data_types = [CElegansSubject, MultiChannelVolumeSeries, MultiChannelVolume, ImagingVolume, OpticalChannelReferences, OpticalChannelPlus, VolumeSegmentation, SegmentationLabels]
+    new_data_types = [CElegansSubject, MultiChannelVolumeSeries, MultiChannelVolume, ImagingVolume, OpticalChannelReferences, OpticalChannelPlus, VolumeSegmentation, SegmentationLabels, PlaneExtension]
 
     # export the spec to yaml files in the spec folder
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'spec'))

@@ -206,6 +206,28 @@ class VolumeSegmentation(PlaneSegmentation):
     def create_roi_table_region(self, **kwargs):
         return self.create_region(**kwargs)
     
+@register_class('PlaneExtension', 'ndx-multichannel-volume')
+class PlaneExtension(PlaneSegmentation):
+
+    __fields__ = ({'name':'imaging_plane', 'child':True},
+                  {'name':'reference_images','child':True})
+
+    @docval(*get_docval(PlaneSegmentation.__init__, 'imaging_plane', 'name','reference_images','id','description', 'columns', 'colnames'))
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    @docval(*get_docval(PlaneSegmentation.add_roi,'pixel_mask','voxel_mask','image_mask','id'),
+            allow_extra=True)
+    
+    def add_roi(self, **kwargs):
+        """Add a Region Of Interest (ROI) data to this"""
+        return super().add_roi(**kwargs)
+
+    @docval(*get_docval(PlaneSegmentation.create_roi_table_region, 'description','region','name'))
+    def create_roi_table_region(self, **kwargs):
+        return self.create_region(**kwargs)
+    
 @register_class('MultiChannelVolume', 'ndx-multichannel-volume')
 class MultiChannelVolume(NWBDataInterface):
     """An imaging plane and its metadata."""
