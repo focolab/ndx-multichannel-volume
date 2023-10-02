@@ -5,6 +5,7 @@ from pynwb.spec import NWBNamespaceBuilder, export_spec, NWBGroupSpec, NWBAttrib
 # TODO: import other spec classes as needed
 from pynwb.spec import NWBDatasetSpec, NWBLinkSpec, NWBDtypeSpec, NWBRefSpec
 from datetime import datetime, timedelta
+import re
 
 def main():
     # these arguments were auto-generated from your cookiecutter inputs
@@ -188,28 +189,27 @@ def main():
                 dtype = 'int32',
                 dims = ['num_files'],
                 shape = [None],
-                doc = """Each external image may contain one or more consecutive frames of the full
-                         ImageSeries. This attribute serves as an index to indicate which frames each file
-                         contains, to faciliate random access. The 'starting_frame' attribute, hence,
-                         contains a list of frame numbers within the full ImageSeries of the first frame
-                         of each file listed in the parent 'external_file' dataset. Zero-based indexing is
-                         used (hence, the first element will always be zero). For example, if the
-                         'external_file' dataset has three paths to files and the first file has 5 frames,
-                         the second file has 10 frames, and the third file has 20 frames, then this
-                         attribute will have values [0, 5, 15]. If there is a single external file that
-                         holds all of the frames of the ImageSeries (and so there is a single element in
-                         the 'external_file' dataset), then this attribute should have value [0].""",
+                doc = re.sub("[\t ]{2,}", " ","""Each external image may contain one or more consecutive frames of the full
+                ImageSeries. This attribute serves as an index to indicate which frames each file
+                contains, to faciliate random access. The 'starting_frame' attribute, hence,
+                contains a list of frame numbers within the full ImageSeries of the first frame
+                of each file listed in the parent 'external_file' dataset. Zero-based indexing is
+                used (hence, the first element will always be zero). For example, if the
+                'external_file' dataset has three paths to files and the first file has 5 frames,
+                the second file has 10 frames, and the third file has 20 frames, then this
+                attribute will have values [0, 5, 15]. If there is a single external file that
+                holds all of the frames of the ImageSeries (and so there is a single element in
+                the 'external_file' dataset), then this attribute should have value [0].""".replace('\n',' ')),
                 required = False
             ),
             NWBAttributeSpec(
                 name = 'format',
                 dtype = 'text',
                 default_value = 'raw',
-                doc = """Format of image. If this is 'external', then the attribute 'external_file'
-                         contains the path information to the image files. If this is 'raw', then the raw
-                         (single-channel) binary data is stored in the 'data' dataset. If this attribute
-                         is not present, then the default format='raw' case is assumed.     
-                        """
+                doc = re.sub("[\t ]{2,}", " ","""Format of image. If this is 'external', then the attribute 'external_file'
+                contains the path information to the image files. If this is 'raw', then the raw
+                (single-channel) binary data is stored in the 'data' dataset. If this attribute
+                is not present, then the default format='raw' case is assumed.""".replace('\n',' '))
             )
         ],
 
