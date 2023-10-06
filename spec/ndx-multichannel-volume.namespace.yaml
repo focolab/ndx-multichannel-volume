@@ -28,4 +28,4 @@ namespaces:
     neurodata_types:
     - Data
   - source: ndx-multichannel-volume.extensions.yaml
-  version: 0.1.10
+  version: 0.1.11

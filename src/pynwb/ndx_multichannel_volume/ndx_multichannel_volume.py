@@ -505,8 +505,6 @@ class SegmentationLabels(NWBDataInterface):
 
         name = getargs("name", kwargs)
 
-        print(kwargs.keys())
-
         if kwargs['ImageSegmentation'] is not None:
             if kwargs['MCVSegmentation'] is not None or kwargs['MCVSeriesSegmentation'] is not None:
                 raise ValueError("Use only one of ImageSegmentation, MCVSegmentation, MCVSeries Segmentation for %s '%s'."
