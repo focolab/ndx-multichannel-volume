@@ -55,7 +55,6 @@ CElegansSubject = get_class('CElegansSubject', 'ndx-multichannel-volume')
 OpticalChannelReferences = get_class('OpticalChannelReferences', 'ndx-multichannel-volume')
 OpticalChannelPlus = get_class('OpticalChannelPlus', 'ndx-multichannel-volume')
 MultiChannelVolumeSeries = get_class('MultiChannelVolumeSeries', 'ndx-multichannel-volume')
-SegmentationLabels = get_class('SegmentationLabels', 'ndx-multichannel-volume')
 
 @register_class('ImagingVolume', 'ndx-multichannel-volume')
 class ImagingVolume(ImagingPlane):
@@ -482,4 +481,64 @@ class MultiChannelVolumeSeries(TimeSeries):
             % (self.__class__.__name__, self.name)
         )
 
+@register_class('SegmentationLabels', 'ndx-multichannel-volume')
+class SegmentationLabels(NWBDataInterface):
+    """ROI labels for a segmentation"""
 
+    __nwbfields__ = ('labels',
+                     'description',
+                     'ImageSegmentation',
+                     'MCVSegmentation',
+                     'MCVSeriesSegmentation')
+    
+    @docval(*get_docval(NWBDataInterface.__init__, 'name'),  # required
+            {'name': 'labels', 'type':('array_data', list, str), 'doc':'List of ROI labels', 'shape':[None]},
+            {'name': 'description', 'type': str, 'doc':'description of what ROI labels represent'},
+            {'name': 'ImageSegmentation', 'doc': 'ImageSegmentation holding ROIs', 'type': ImageSegmentation, 'default':None},
+            {'name': 'MCVSegmentation', 'doc': 'MultiChannelVolume holding image mask ROIs', 'type': MultiChannelVolume, 'default':None},
+            {'name': 'MCVSeriesSegmentation', 'doc':'MultiChannelVolumeSeries holding image mask ROIs', 'type':MultiChannelVolumeSeries, 'default':None}
+            )
+
+    def __init__(self, **kwargs):
+        keys_to_set = ('labels',
+                       'description')
+
+        name = getargs("name", kwargs)
+
+        print(kwargs.keys())
+
+        if kwargs['ImageSegmentation'] is not None:
+            if kwargs['MCVSegmentation'] is not None or kwargs['MCVSeriesSegmentation'] is not None:
+                raise ValueError("Use only one of ImageSegmentation, MCVSegmentation, MCVSeries Segmentation for %s '%s'."
+                             % (self.__class__.__name__, name))
+            else:
+                keys_to_set = ('labels', 'description', 'ImageSegmentation')
+                keys_to_remove = ('MCVSegmentation','MCVSeriesSegmentation')
+
+        elif kwargs['MCVSegmentation'] is not None:
+            if kwargs['ImageSegmentation'] is not None or kwargs['MCVSeriesSegmentation'] is not None:
+                raise ValueError("Use only one of ImageSegmentation, MCVSegmentation, MCVSeries Segmentation for %s '%s'."
+                             % (self.__class__.__name__, name))
+            else:
+                keys_to_set = ('labels', 'description', 'MCVSegmentation')
+                keys_to_remove = ('ImageSegmentation','MCVSeriesSegmentation')
+
+        elif kwargs['MCVSeriesSegmentation'] is not None:
+            if kwargs['ImageSegmentation'] is not None or kwargs['MCVSegmentation'] is not None:
+                raise ValueError("Use only one of ImageSegmentation, MCVSegmentation, MCVSeries Segmentation for %s '%s'."
+                             % (self.__class__.__name__, name))
+            else:
+                keys_to_set = ('labels', 'description', 'MCVSeriesSegmentation')
+                keys_to_remove = ('MCVSegmentation','ImageSegmentation')
+
+        else:
+            raise ValueError("Must include reference to Segmentation object %s '%s'."
+                             % (self.__class__.__name__, name))
+
+        args_to_set = popargs_to_dict(keys_to_set, kwargs)
+        args_to_remove = popargs_to_dict(keys_to_remove, kwargs)
+
+        super().__init__(**kwargs)
+
+        for key, val in args_to_set.items():
+            setattr(self, key, val)

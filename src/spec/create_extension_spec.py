@@ -12,7 +12,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc="""extension to allow use of multichannel volumetric images""",
         name="""ndx-multichannel-volume""",
-        version="""0.1.9""",
+        version="""0.1.10""",
         author=list(map(str.strip, """Daniel Sprague""".split(','))),
         contact=list(map(str.strip, """daniel.sprague@ucsf.edu""".split(',')))
     )
