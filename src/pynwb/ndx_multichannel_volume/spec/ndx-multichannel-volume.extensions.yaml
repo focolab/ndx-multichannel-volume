@@ -283,3 +283,6 @@ groups:
     target_type: MultiChannelVolumeSeries
     doc: Link to MultiChannelVolumeSeries holding series of indexed masks of ROIs.
     quantity: '?'
+- neurodata_type_def: PlaneExtension
+  neurodata_type_inc: PlaneSegmentation
+  doc: Results from image segmentation of a specific imaging volume
