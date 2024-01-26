@@ -61,7 +61,7 @@ class ImagingVolume(ImagingPlane):
     """An imaging plane and its metadata."""
 
     __nwbfields__ = ({'name': 'optical_channel_plus', 'child': True},
-                     'order_optical_channels',
+                     {'name':'order_optical_channels', 'child':True, 'required_name': 'order_optical_channels'},
                      'description',
                      'device',
                      'location',
@@ -236,7 +236,7 @@ class MultiChannelVolume(NWBDataInterface):
                      'RGBW_channels',
                      'data',
                      'imaging_volume',
-                     'order_optical_channels'
+                     {'name':'order_optical_channels', 'child':True, 'required_name': 'order_optical_channels'},
                      )
 
     @docval(*get_docval(NWBDataInterface.__init__, 'name'),  # required
