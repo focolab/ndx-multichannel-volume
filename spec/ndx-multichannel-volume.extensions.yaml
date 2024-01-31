@@ -160,10 +160,6 @@ groups:
     - null
     - null
     doc: Volumetric multichannel data
-  groups:
-  - name: order_optical_channels
-    neurodata_type_inc: OpticalChannelReferences
-    doc: Ordered list of names of the optical channels in the data
   links:
   - name: imaging_volume
     target_type: ImagingVolume
@@ -188,7 +184,8 @@ groups:
     - NumChannels
     shape:
     - null
-    doc: Ordered list of names of optical channels
+    doc: Ordered list of names of optical channels. Should refer to the names of the
+      OpticalChannelPlus objects. ie. GCaMP, mNeptune, etc.
 - neurodata_type_def: OpticalChannelPlus
   neurodata_type_inc: OpticalChannel
   doc: An optical channel used to record from an imaging volume. Contains both emission

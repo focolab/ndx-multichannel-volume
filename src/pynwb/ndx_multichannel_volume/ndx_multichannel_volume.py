@@ -78,7 +78,7 @@ class ImagingVolume(ImagingPlane):
     @docval(*get_docval(ImagingPlane.__init__, 'name', 'description', 'device', 'location', 'reference_frame', 'origin_coords', 'origin_coords_unit', 'grid_spacing', 'grid_spacing_unit'),  # required
             {'name': 'optical_channel_plus', 'type': ('data', 'array_data', OpticalChannelPlus),  # required
              'doc': 'One of possibly many groups storing channel-specific data.'},
-            {'name': 'order_optical_channels', 'type':OpticalChannelReferences, 'doc':'Order of the optical channels in the data'})
+            {'name': 'order_optical_channels', 'type':OpticalChannelReferences, 'doc':'Order of the optical channels in the data. Each element in list should '})
     def __init__(self, **kwargs):
         keys_to_set = ('optical_channel_plus',
                        'order_optical_channels')
@@ -235,8 +235,7 @@ class MultiChannelVolume(NWBDataInterface):
                      'description',
                      'RGBW_channels',
                      'data',
-                     'imaging_volume',
-                     {'name':'order_optical_channels', 'child':True, 'required_name': 'order_optical_channels'},
+                     'imaging_volume'
                      )
 
     @docval(*get_docval(NWBDataInterface.__init__, 'name'),  # required
@@ -244,7 +243,6 @@ class MultiChannelVolume(NWBDataInterface):
             {'name': 'description', 'type': str, 'doc':'description of image'},
             {'name': 'RGBW_channels', 'doc': 'which channels in image map to RGBW', 'type': 'array_data', 'shape':[None]},
             {'name': 'data', 'doc': 'Volumetric multichannel data', 'type': ('array_data', 'data'), 'shape':[None]*4},
-            {'name': 'order_optical_channels', 'type':OpticalChannelReferences, 'doc':'Order of the optical channels in the data'}
     )
     
     def __init__(self, **kwargs):
@@ -252,7 +250,6 @@ class MultiChannelVolume(NWBDataInterface):
                        'RGBW_channels',
                        'data',
                        'imaging_volume',
-                       'order_optical_channels'
                        )
         args_to_set = popargs_to_dict(keys_to_set, kwargs)
         super().__init__(**kwargs)

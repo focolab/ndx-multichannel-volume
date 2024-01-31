@@ -12,7 +12,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc="""extension to allow use of multichannel volumetric images""",
         name="""ndx-multichannel-volume""",
-        version="""0.1.11""",
+        version="""0.1.12""",
         author=list(map(str.strip, """Daniel Sprague""".split(','))),
         contact=list(map(str.strip, """daniel.sprague@ucsf.edu""".split(',')))
     )
@@ -254,14 +254,6 @@ def main():
             )
         ],
 
-        groups = [
-                NWBGroupSpec(
-                name = 'order_optical_channels',
-                doc = 'Ordered list of names of the optical channels in the data',
-                neurodata_type_inc = 'OpticalChannelReferences',
-            )
-        ],
-
         links = [
             NWBLinkSpec(
                 name = 'imaging_volume',
@@ -328,7 +320,7 @@ def main():
                 dtype = 'text',
                 dims = ['NumChannels'],
                 shape = [None],
-                doc = 'Ordered list of names of optical channels'
+                doc = 'Ordered list of names of optical channels. Should refer to the names of the OpticalChannelPlus objects. ie. GCaMP, mNeptune, etc.'
             )     
         ]
     )
