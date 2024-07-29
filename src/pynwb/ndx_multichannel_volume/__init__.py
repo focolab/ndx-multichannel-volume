@@ -25,6 +25,7 @@ import pandas as pd
 import scipy.io as sio
 from datetime import datetime, timedelta
 from .ndx_multichannel_volume import *
+from .ndx_checks import *
 
 # Set path of the namespace.yaml file to the expected install location
 MultiChannelVol_specpath = os.path.join(

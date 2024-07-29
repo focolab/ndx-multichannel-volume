@@ -26,7 +26,7 @@ import scipy.io as sio
 from datetime import datetime, timedelta
 import warnings
 
-
+from nwbinspector.register_checks import available_checks, register_check, Importance, InspectorMessage
 
 # Set path of the namespace.yaml file to the expected install location
 MultiChannelVol_specpath = os.path.join(
