@@ -380,7 +380,7 @@ class MultiChannelVolumeSeries(TimeSeries):
                 DeprecationWarning,
             )
 
-        if not self._check_image_series_dimension():
+        if self._check_image_series_dimension() is not None:
             warnings.warn(
                 "%s '%s': Length of data does not match length of timestamps. Your data may be transposed. "
                 "Time should be on the 0th dimension"
@@ -422,7 +422,7 @@ class MultiChannelVolumeSeries(TimeSeries):
         """Override _check_time_series_dimension to do nothing.
         The _check_image_series_dimension method will be called instead.
         """
-        return True
+        return None
 
     def _check_image_series_dimension(self):
         """Check that the 0th dimension of data equals the length of timestamps, when applicable.
@@ -432,7 +432,7 @@ class MultiChannelVolumeSeries(TimeSeries):
         is provided. Otherwise, this function calls the parent class' _check_time_series_dimension method.
         """
         if self.external_file is not None:
-            return True
+            return None
         return super()._check_time_series_dimension()
 
     def _check_external_file_starting_frame_length(self):
