@@ -387,14 +387,26 @@ class MultiChannelVolumeSeries(TimeSeries):
                 % (self.__class__.__name__, self.name)
             )
 
-        self._error_on_new_warn_on_construct(
-            error_msg=self._check_external_file_starting_frame_length()
-        )
-        self._error_on_new_warn_on_construct(
-            error_msg=self._check_external_file_format()
-        )
-        self._error_on_new_warn_on_construct(error_msg=self._check_external_file_data())
+        # Validate external_file related fields, None means no error. Check because warnings can no longer handle NoneType values
+        _external_file_frame_length = self._check_external_file_starting_frame_length()
+        if _external_file_frame_length is not None:
+            self._error_on_new_warn_on_construct(
+                error_msg=_external_file_frame_length
+            )
 
+        _external_file_format = self._check_external_file_format()
+        if _external_file_format is not None:
+            self._error_on_new_warn_on_construct(
+                error_msg=_external_file_format
+            )
+        
+        _external_file_data = self._check_external_file_data()
+        if _external_file_data is not None:
+            self._error_on_new_warn_on_construct(
+                error_msg=_external_file_data
+            )
+
+        
         if args_to_set["binning"] is not None and args_to_set["binning"] < 0:
             raise ValueError(f"Binning value must be >= 0: {args_to_set['binning']}")
         if isinstance(args_to_set["binning"], int):
@@ -441,7 +453,7 @@ class MultiChannelVolumeSeries(TimeSeries):
         the number of files in 'external_file'.
         """
         if self.external_file is None:
-            return
+            return 
         if get_data_shape(self.external_file) == get_data_shape(self.starting_frame):
             return
 
